@@ -2,6 +2,7 @@
 
 <html>
 <head>
+<title>CurrencyBase</title>
 	<link href="<c:url value="/resources/vendor/bootstrap/css/bootstrap.min.css" />" rel="stylesheet">
 	<style>
 	#background {
