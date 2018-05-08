@@ -17,7 +17,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.ehcache.EhCacheManagerFactoryBean;
 import org.springframework.http.MediaType;
-import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.ModelMap;
 import org.springframework.validation.BindingResult;
@@ -33,7 +32,6 @@ import com.antuansoft.mongodb.domain.User;
 import com.antuansoft.mongodb.repositories.CampaignRepositoryDao;
 import com.antuansoft.mongodb.repositories.CountryRepositoryDao;
 import com.antuansoft.mongodb.repositories.UserRepositoryDao;
-import com.fasterxml.jackson.databind.jsonFormatVisitors.JsonObjectFormatVisitor;
 import com.mongodb.BasicDBObject;
 import com.mongodb.util.JSON;
 
@@ -60,25 +58,10 @@ public class MainController{
 	@Autowired
 	private  EhCacheManagerFactoryBean ehcache;
 	
-	
-/*	static{
-		ApplicationContext context = new AnnotationConfigApplicationContext(AppConfig.class);
-		userRepositoryDao = (UserRepositoryDao) context.getBean("UserRepositoryDao");
-		campaignRepositoryDao = (CampaignRepositoryDao) context.getBean("CampaignRepositoryDao");
-		countryRepositoryDao = (CountryRepositoryDao) context.getBean("CountryRepositoryDao");
-		 ((ConfigurableApplicationContext)context).close();
-	}
-*/
 	Iterable<Campaign> campaings;
-	
-/*	@Autowired
-    private UserRegistrationDaoImpl dao;*/
 	
 	private static final Logger logger = Logger.getLogger(MainController.class);
 
-	
-
-	
 	@RequestMapping(value = "/", method = RequestMethod.GET)
 	public String defaultPage(ModelMap map) {
 		return "redirect:/menu";
@@ -110,16 +93,6 @@ public class MainController{
 		}
 		return "menu";
 	}
-
-	@RequestMapping(value = "/listUsers", method = RequestMethod.GET)
-	public String listUsers(ModelMap map) {
-		
-		Iterable<User> users= userRepositoryDao.findAll();
-		map.addAttribute("users", users);
-		
-		return "listUsers";
-	}
-	
 	
 	@RequestMapping(value = "/currRates", method = RequestMethod.GET, produces = MediaType.APPLICATION_JSON_VALUE)
 	public String listCurrRates(ModelMap map) {
@@ -157,21 +130,10 @@ public class MainController{
 	}
 	
 
-
 	private Object filterdata(BasicDBObject basicDBObject) {
-		//return JSON.parse("{\"EUR\":"+basicDBObject.get("EUR")+",\"GBP\":"+basicDBObject.get("GBP")+",\"INR\":"+basicDBObject.get("INR")+",\"NZD\":"+basicDBObject.get("NZD")+",\"AUD\":"+basicDBObject.get("AUD")+",\"JPY\":"+basicDBObject.get("JPY")+",\"HUF\":"+basicDBObject.get("HUF")+"}");
-
 		return JSON.parse("{EUR:"+basicDBObject.get("EUR")+",GBP:"+basicDBObject.get("GBP")+",INR:"+basicDBObject.get("INR")+",NZD:"+basicDBObject.get("NZD")+",AUD:"+basicDBObject.get("AUD")+",JPY:"+basicDBObject.get("JPY")+",HUF:"+basicDBObject.get("HUF")+"}");
 	}
 
-	private void slowQuery(long seconds){
-		try {
-	        Thread.sleep(seconds);
-	    } catch (InterruptedException e) {
-	        throw new IllegalStateException(e);
-	    }
-	}
-	
 	private void saveHistoryDate(String date, Object data) {
 		Iterable<Campaign> camp = campaignRepositoryDao.findAll();
 		Iterator<Campaign> itr = camp.iterator();
@@ -190,43 +152,6 @@ public class MainController{
 		Cache cache = ehcache.getObject().getCache("history");
 		cache.removeAll();
 		}
-	}
-
-	
-	@RequestMapping(value = "/listCampaigns", method = RequestMethod.GET)
-	public String listCampaigns(ModelMap map) {
-		
-		//map.addAttribute("new_campaign", new Campaign());
-		campaings = campaignRepositoryDao.findAll();
-		//createCache(campaings);
-		map.addAttribute("campaigns",campaings);
-		
-		return "listCampaigns";
-	}
-	
-	private void createCache(Iterable<Campaign> campaings) {
-		Cache cache = ehcache.getObject().getCache("historyFindCache");
-		if(null == cache){
-			ehcache.getObject().addCache("historyFindCache");
-		}
-		Iterator<Campaign> itr = campaings.iterator();
-		Campaign cam;
-		while((cam = itr.next())!= null){
-			 Element e = new Element(cam.getDate(), cam.getData()) ;
-			 cache.putIfAbsent(e);
-		}
-		
-	}
-
-	@PreAuthorize("hasRole('ROLE_CAMPAIGN')")
-	@RequestMapping(value = "/addCampaing", method = RequestMethod.POST)
-	public String addCampaign(@ModelAttribute(value = "new_campaign") Campaign new_campaign,
-			BindingResult result){
-		
-		new_campaign.setId(UUID.randomUUID().toString());
-		campaignRepositoryDao.save(new_campaign);
-		
-		return "redirect:/listCampaigns";
 	}
 	
 	@RequestMapping(value = "/register", method = RequestMethod.GET)
