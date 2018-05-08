@@ -26,11 +26,11 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.client.RestTemplate;
 
-import com.antuansoft.mongodb.domain.Campaign;
 import com.antuansoft.mongodb.domain.Country;
+import com.antuansoft.mongodb.domain.History;
 import com.antuansoft.mongodb.domain.User;
-import com.antuansoft.mongodb.repositories.CampaignRepositoryDao;
 import com.antuansoft.mongodb.repositories.CountryRepositoryDao;
+import com.antuansoft.mongodb.repositories.HistoryRepositoryDao;
 import com.antuansoft.mongodb.repositories.UserRepositoryDao;
 import com.mongodb.BasicDBObject;
 import com.mongodb.util.JSON;
@@ -52,13 +52,13 @@ public class MainController{
 	@Autowired
 	private  UserRepositoryDao userRepositoryDao;
 	@Autowired
-	private  CampaignRepositoryDao campaignRepositoryDao;
+	private  HistoryRepositoryDao historyRepositoryDao;
 	@Autowired
 	private  CountryRepositoryDao countryRepositoryDao;
 	@Autowired
 	private  EhCacheManagerFactoryBean ehcache;
 	
-	Iterable<Campaign> campaings;
+	Iterable<History> histories;
 	
 	private static final Logger logger = Logger.getLogger(MainController.class);
 
@@ -85,11 +85,11 @@ public class MainController{
 	
 	@RequestMapping(value = "/menu", method = RequestMethod.GET)
 	public String menu(ModelMap map) {
-		if(campaings!= null) {
-			map.addAttribute("camp",campaings);
+		if(histories!= null) {
+			map.addAttribute("camp",histories);
 		} else {
-		Iterable<Campaign> campaings= campaignRepositoryDao.findAll();
-		map.addAttribute("camp",campaings);
+		Iterable<History> histories= historyRepositoryDao.findAll();
+		map.addAttribute("camp",histories);
 		}
 		return "menu";
 	}
@@ -135,9 +135,9 @@ public class MainController{
 	}
 
 	private void saveHistoryDate(String date, Object data) {
-		Iterable<Campaign> camp = campaignRepositoryDao.findAll();
-		Iterator<Campaign> itr = camp.iterator();
-		Campaign c;
+		Iterable<History> camp = historyRepositoryDao.findAll();
+		Iterator<History> itr = camp.iterator();
+		History c;
 		boolean noSave = false;
 		while(itr.hasNext()){
 			c= itr.next();
@@ -147,8 +147,8 @@ public class MainController{
 			}
 		}
 		if(!noSave) {
-		Campaign cam = new Campaign(UUID.randomUUID().toString(),"History data :", date, data);
-		campaignRepositoryDao.save(cam);
+		History cam = new History(UUID.randomUUID().toString(),"History data :", date, data);
+		historyRepositoryDao.save(cam);
 		Cache cache = ehcache.getObject().getCache("history");
 		cache.removeAll();
 		}
